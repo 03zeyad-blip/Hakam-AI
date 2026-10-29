@@ -1,0 +1,47 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --font-display: 'Outfit', 'Tajawal', sans-serif;
+    --font-sans: 'Plus Jakarta Sans', 'Tajawal', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  html[dir="rtl"] {
+    font-family: 'Tajawal', 'Plus Jakarta Sans', sans-serif;
+  }
+
+  html[dir="ltr"] {
+    font-family: 'Plus Jakarta Sans', 'Tajawal', sans-serif;
+  }
+
+  body {
+    color: #0B191C;
+    background-color: #F2F6F6;
+  }
+
+  html.dark body {
+    color: #F8FAFC;
+    background-color: #0D1B1E;
+  }
+
+  h1, h2, h3, h4, .font-display {
+    font-family: var(--font-display);
+    text-wrap: balance;
+  }
+
+  input, select, textarea {
+    color: #0B191C;
+    background-color: #FFFFFF;
+  }
+
+  html.dark input, html.dark select, html.dark textarea {
+    color: #FFFFFF;
+    background-color: #12262A;
+  }
+
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}

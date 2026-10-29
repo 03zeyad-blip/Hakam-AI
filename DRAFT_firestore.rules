@@ -1,0 +1,258 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Safety Net (Default Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 2. Hardened Global Primitives
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+    function incoming() {
+      return request.resource.data;
+    }
+    function existing() {
+      return resource.data;
+    }
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+    function isFamilyOwner(familyId) {
+      return isSignedIn() && request.auth.uid == familyId;
+    }
+    function parentFamilyExistsAndOwned(familyId) {
+      return exists(/databases/$(database)/documents/families/$(familyId)) &&
+        get(/databases/$(database)/documents/families/$(familyId)).data.ownerId == request.auth.uid;
+    }
+
+    // 3. Entity Validation Blueprints
+    function isValidFamily(data, familyId) {
+      return data.keys().hasAll([
+        'ownerId', 'name', 'language', 'voiceCommentator',
+        'fairPlayEnabled', 'demoMode', 'theme', 'teamAName', 'teamBName',
+        'createdAt', 'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'ownerId', 'name', 'language', 'voiceCommentator',
+        'fairPlayEnabled', 'demoMode', 'theme', 'teamAName', 'teamBName',
+        'createdAt', 'updatedAt'
+      ]) &&
+      data.ownerId is string && data.ownerId.size() <= 128 && data.ownerId == request.auth.uid && data.ownerId == familyId &&
+      data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
+      data.language is string && data.language.size() <= 5 && data.language in ['en', 'ar'] &&
+      data.voiceCommentator is string && data.voiceCommentator.size() <= 5 && data.voiceCommentator in ['en', 'ar', 'off'] &&
+      data.fairPlayEnabled is bool &&
+      data.demoMode is bool &&
+      data.theme is string && data.theme.size() <= 10 && data.theme in ['light', 'dark'] &&
+      data.teamAName is string && data.teamAName.size() >= 1 && data.teamAName.size() <= 60 &&
+      data.teamBName is string && data.teamBName.size() >= 1 && data.teamBName.size() <= 60 &&
+      data.createdAt is string && data.createdAt.size() <= 40 &&
+      data.updatedAt is string && data.updatedAt.size() <= 40;
+    }
+
+    function isValidPlayer(data, familyId) {
+      return data.keys().hasAll([
+        'ownerId', 'familyId', 'name', 'age', 'team',
+        'colour', 'avatar', 'badges', 'ready', 'createdAt', 'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'ownerId', 'familyId', 'name', 'age', 'team',
+        'colour', 'avatar', 'badges', 'ready', 'createdAt', 'updatedAt'
+      ]) &&
+      data.ownerId is string && data.ownerId.size() <= 128 && data.ownerId == request.auth.uid &&
+      data.familyId is string && data.familyId.size() <= 128 && data.familyId == familyId &&
+      data.name is string && data.name.size() >= 1 && data.name.size() <= 60 &&
+      data.age is number && data.age >= 1 && data.age <= 120 &&
+      data.team is string && data.team.size() <= 5 && data.team in ['A', 'B'] &&
+      data.colour is string && data.colour.size() >= 1 && data.colour.size() <= 20 &&
+      data.avatar is string && data.avatar.size() >= 1 && data.avatar.size() <= 30 &&
+      data.badges is list && data.badges.size() <= 10 &&
+      (data.badges.size() == 0 || (data.badges[0] is string && data.badges[0].size() <= 50)) &&
+      data.ready is bool &&
+      data.createdAt is string && data.createdAt.size() <= 40 &&
+      data.updatedAt is string && data.updatedAt.size() <= 40;
+    }
+
+    function isValidGame(data, familyId) {
+      return data.keys().hasAll([
+        'ownerId', 'familyId', 'gameType', 'teamAName', 'teamBName',
+        'scoreA', 'scoreB', 'winner', 'mvpName', 'mvpReasonEn', 'mvpReasonAr',
+        'coachSummaryEn', 'coachSummaryAr', 'reportHash', 'verified', 'createdAt'
+      ]) &&
+      data.keys().hasOnly([
+        'ownerId', 'familyId', 'gameType', 'teamAName', 'teamBName',
+        'scoreA', 'scoreB', 'winner', 'mvpName', 'mvpReasonEn', 'mvpReasonAr',
+        'coachSummaryEn', 'coachSummaryAr', 'reportHash', 'verified', 'createdAt'
+      ]) &&
+      data.ownerId is string && data.ownerId.size() <= 128 && data.ownerId == request.auth.uid &&
+      data.familyId is string && data.familyId.size() <= 128 && data.familyId == familyId &&
+      data.gameType is string && data.gameType.size() <= 30 && data.gameType in ['football', 'camel_race', 'proverb_relay'] &&
+      data.teamAName is string && data.teamAName.size() <= 60 &&
+      data.teamBName is string && data.teamBName.size() <= 60 &&
+      data.scoreA is number && data.scoreA >= 0 && data.scoreA <= 1000 &&
+      data.scoreB is number && data.scoreB >= 0 && data.scoreB <= 1000 &&
+      data.winner is string && data.winner.size() <= 80 &&
+      data.mvpName is string && data.mvpName.size() <= 60 &&
+      data.mvpReasonEn is string && data.mvpReasonEn.size() <= 300 &&
+      data.mvpReasonAr is string && data.mvpReasonAr.size() <= 300 &&
+      data.coachSummaryEn is string && data.coachSummaryEn.size() <= 1000 &&
+      data.coachSummaryAr is string && data.coachSummaryAr.size() <= 1000 &&
+      data.reportHash is string && data.reportHash.size() <= 128 &&
+      data.verified is bool &&
+      data.createdAt is string && data.createdAt.size() <= 40;
+    }
+
+    function isValidGameEvent(data, familyId, gameId) {
+      return data.keys().hasAll([
+        'ownerId', 'familyId', 'gameId', 'timeSec', 'type',
+        'team', 'playerName', 'points', 'reasonEn', 'reasonAr',
+        'thumbnailDataUrl', 'verified', 'createdAt'
+      ]) &&
+      data.keys().hasOnly([
+        'ownerId', 'familyId', 'gameId', 'timeSec', 'type',
+        'team', 'playerName', 'points', 'reasonEn', 'reasonAr',
+        'thumbnailDataUrl', 'verified', 'createdAt'
+      ]) &&
+      data.ownerId is string && data.ownerId.size() <= 128 && data.ownerId == request.auth.uid &&
+      data.familyId is string && data.familyId.size() <= 128 && data.familyId == familyId &&
+      data.gameId is string && data.gameId.size() <= 128 && data.gameId == gameId &&
+      data.timeSec is number && data.timeSec >= 0 && data.timeSec <= 86400 &&
+      data.type is string && data.type.size() <= 40 &&
+      data.team is string && data.team.size() <= 20 &&
+      data.playerName is string && data.playerName.size() <= 60 &&
+      data.points is number && data.points >= -100 && data.points <= 100 &&
+      data.reasonEn is string && data.reasonEn.size() <= 300 &&
+      data.reasonAr is string && data.reasonAr.size() <= 300 &&
+      data.thumbnailDataUrl is string && data.thumbnailDataUrl.size() <= 150000 &&
+      data.verified is bool &&
+      data.createdAt is string && data.createdAt.size() <= 40;
+    }
+
+    function isValidProverb(data, familyId) {
+      return data.keys().hasAll([
+        'ownerId', 'familyId', 'firstHalf', 'ending', 'meaningEn', 'category', 'createdAt'
+      ]) &&
+      data.keys().hasOnly([
+        'ownerId', 'familyId', 'firstHalf', 'ending', 'meaningEn', 'category', 'createdAt'
+      ]) &&
+      data.ownerId is string && data.ownerId.size() <= 128 && data.ownerId == request.auth.uid &&
+      data.familyId is string && data.familyId.size() <= 128 && data.familyId == familyId &&
+      data.firstHalf is string && data.firstHalf.size() >= 1 && data.firstHalf.size() <= 200 &&
+      data.ending is string && data.ending.size() >= 1 && data.ending.size() <= 200 &&
+      data.meaningEn is string && data.meaningEn.size() >= 1 && data.meaningEn.size() <= 300 &&
+      data.category is string && data.category.size() <= 60 &&
+      data.createdAt is string && data.createdAt.size() <= 40;
+    }
+
+    function isValidLeaderboardEntry(data, familyId) {
+      return data.keys().hasAll([
+        'ownerId', 'familyId', 'playerName', 'team', 'points',
+        'wins', 'goals', 'bestRaceTime', 'correctAnswers', 'fairPlayBonusCount', 'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'ownerId', 'familyId', 'playerName', 'team', 'points',
+        'wins', 'goals', 'bestRaceTime', 'correctAnswers', 'fairPlayBonusCount', 'updatedAt'
+      ]) &&
+      data.ownerId is string && data.ownerId.size() <= 128 && data.ownerId == request.auth.uid &&
+      data.familyId is string && data.familyId.size() <= 128 && data.familyId == familyId &&
+      data.playerName is string && data.playerName.size() >= 1 && data.playerName.size() <= 60 &&
+      data.team is string && data.team.size() <= 20 &&
+      data.points is number && data.points >= 0 && data.points <= 100000 &&
+      data.wins is number && data.wins >= 0 && data.wins <= 10000 &&
+      data.goals is number && data.goals >= 0 && data.goals <= 10000 &&
+      data.bestRaceTime is number && data.bestRaceTime >= 0 && data.bestRaceTime <= 10000 &&
+      data.correctAnswers is number && data.correctAnswers >= 0 && data.correctAnswers <= 10000 &&
+      data.fairPlayBonusCount is number && data.fairPlayBonusCount >= 0 && data.fairPlayBonusCount <= 10000 &&
+      data.updatedAt is string && data.updatedAt.size() <= 40;
+    }
+
+    // 4. Collection Rules
+    match /families/{familyId} {
+      allow get: if isSignedIn() && isValidId(familyId) && isFamilyOwner(familyId) && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && existing().ownerId == request.auth.uid;
+      allow create: if isVerifiedUser() && isValidId(familyId) && isFamilyOwner(familyId) && isValidFamily(incoming(), familyId);
+      allow update: if isVerifiedUser() && isValidId(familyId) && isFamilyOwner(familyId) && isValidFamily(incoming(), familyId) &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'name', 'language', 'voiceCommentator', 'fairPlayEnabled',
+          'demoMode', 'theme', 'teamAName', 'teamBName', 'updatedAt'
+        ]);
+      allow delete: if isVerifiedUser() && isValidId(familyId) && isFamilyOwner(familyId) && existing().ownerId == request.auth.uid;
+
+      match /players/{playerId} {
+        allow get: if isSignedIn() && isValidId(familyId) && isValidId(playerId) && isFamilyOwner(familyId) && existing().ownerId == request.auth.uid && parentFamilyExistsAndOwned(familyId);
+        allow list: if isSignedIn() && existing().ownerId == request.auth.uid;
+        allow create: if isVerifiedUser() && isValidId(familyId) && isValidId(playerId) && isFamilyOwner(familyId) && isValidPlayer(incoming(), familyId) && parentFamilyExistsAndOwned(familyId);
+        allow update: if isVerifiedUser() && isValidId(familyId) && isValidId(playerId) && isFamilyOwner(familyId) && isValidPlayer(incoming(), familyId) &&
+          incoming().ownerId == existing().ownerId &&
+          incoming().familyId == existing().familyId &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'name', 'age', 'team', 'colour', 'avatar', 'badges', 'ready', 'updatedAt'
+          ]) &&
+          parentFamilyExistsAndOwned(familyId);
+        allow delete: if isVerifiedUser() && isValidId(familyId) && isValidId(playerId) && isFamilyOwner(familyId) && existing().ownerId == request.auth.uid && parentFamilyExistsAndOwned(familyId);
+      }
+
+      match /games/{gameId} {
+        allow get: if isSignedIn() && isValidId(familyId) && isValidId(gameId) && isFamilyOwner(familyId) && existing().ownerId == request.auth.uid && parentFamilyExistsAndOwned(familyId);
+        allow list: if isSignedIn() && existing().ownerId == request.auth.uid;
+        allow create: if isVerifiedUser() && isValidId(familyId) && isValidId(gameId) && isFamilyOwner(familyId) && isValidGame(incoming(), familyId) && parentFamilyExistsAndOwned(familyId);
+        allow update: if isVerifiedUser() && isValidId(familyId) && isValidId(gameId) && isFamilyOwner(familyId) && isValidGame(incoming(), familyId) &&
+          incoming().ownerId == existing().ownerId &&
+          incoming().familyId == existing().familyId &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'coachSummaryEn', 'coachSummaryAr'
+          ]) &&
+          parentFamilyExistsAndOwned(familyId);
+        allow delete: if isVerifiedUser() && isValidId(familyId) && isValidId(gameId) && isFamilyOwner(familyId) && existing().ownerId == request.auth.uid && parentFamilyExistsAndOwned(familyId);
+
+        match /events/{eventId} {
+          allow get: if isSignedIn() && isValidId(familyId) && isValidId(gameId) && isValidId(eventId) && isFamilyOwner(familyId) && existing().ownerId == request.auth.uid && parentFamilyExistsAndOwned(familyId);
+          allow list: if isSignedIn() && existing().ownerId == request.auth.uid;
+          allow create: if isVerifiedUser() && isValidId(familyId) && isValidId(gameId) && isValidId(eventId) && isFamilyOwner(familyId) && isValidGameEvent(incoming(), familyId, gameId) &&
+            parentFamilyExistsAndOwned(familyId) &&
+            exists(/databases/$(database)/documents/families/$(familyId)/games/$(gameId));
+          allow update: if false;
+          allow delete: if isVerifiedUser() && isValidId(familyId) && isValidId(gameId) && isValidId(eventId) && isFamilyOwner(familyId) && existing().ownerId == request.auth.uid && parentFamilyExistsAndOwned(familyId);
+        }
+      }
+
+      match /proverbs/{proverbId} {
+        allow get: if isSignedIn() && isValidId(familyId) && isValidId(proverbId) && isFamilyOwner(familyId) && existing().ownerId == request.auth.uid && parentFamilyExistsAndOwned(familyId);
+        allow list: if isSignedIn() && existing().ownerId == request.auth.uid;
+        allow create: if isVerifiedUser() && isValidId(familyId) && isValidId(proverbId) && isFamilyOwner(familyId) && isValidProverb(incoming(), familyId) && parentFamilyExistsAndOwned(familyId);
+        allow update: if isVerifiedUser() && isValidId(familyId) && isValidId(proverbId) && isFamilyOwner(familyId) && isValidProverb(incoming(), familyId) &&
+          incoming().ownerId == existing().ownerId &&
+          incoming().familyId == existing().familyId &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'firstHalf', 'ending', 'meaningEn', 'category'
+          ]) &&
+          parentFamilyExistsAndOwned(familyId);
+        allow delete: if isVerifiedUser() && isValidId(familyId) && isValidId(proverbId) && isFamilyOwner(familyId) && existing().ownerId == request.auth.uid && parentFamilyExistsAndOwned(familyId);
+      }
+
+      match /leaderboard/{playerId} {
+        allow get: if isSignedIn() && isValidId(familyId) && isValidId(playerId) && isFamilyOwner(familyId) && existing().ownerId == request.auth.uid && parentFamilyExistsAndOwned(familyId);
+        allow list: if isSignedIn() && existing().ownerId == request.auth.uid;
+        allow create: if isVerifiedUser() && isValidId(familyId) && isValidId(playerId) && isFamilyOwner(familyId) && isValidLeaderboardEntry(incoming(), familyId) && parentFamilyExistsAndOwned(familyId);
+        allow update: if isVerifiedUser() && isValidId(familyId) && isValidId(playerId) && isFamilyOwner(familyId) && isValidLeaderboardEntry(incoming(), familyId) &&
+          incoming().ownerId == existing().ownerId &&
+          incoming().familyId == existing().familyId &&
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'playerName', 'team', 'points', 'wins', 'goals', 'bestRaceTime', 'correctAnswers', 'fairPlayBonusCount', 'updatedAt'
+          ]) &&
+          parentFamilyExistsAndOwned(familyId);
+        allow delete: if isVerifiedUser() && isValidId(familyId) && isValidId(playerId) && isFamilyOwner(familyId) && existing().ownerId == request.auth.uid && parentFamilyExistsAndOwned(familyId);
+      }
+    }
+  }
+}

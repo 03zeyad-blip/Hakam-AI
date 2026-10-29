@@ -1,0 +1,11 @@
+{
+  "name": "Hakam AI — Fair AI Referee for Family Game Day",
+  "description": "Bilingual (Arabic/English) AI Referee web application for family games inspired by sport and UAE heritage — featuring Computer Vision colour tracking, Web Audio start-signal referee, Arabic Speech proverb judge, SHA-256 tamper-proof verification, and Gemini AI Coach.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -1,0 +1,439 @@
+{
+  "entities": {
+    "Family": {
+      "title": "Family",
+      "description": "Represents a family account and settings in Hakam AI.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "language": {
+          "type": "string",
+          "enum": ["en", "ar"],
+          "maxLength": 5
+        },
+        "voiceCommentator": {
+          "type": "string",
+          "enum": ["en", "ar", "off"],
+          "maxLength": 5
+        },
+        "fairPlayEnabled": {
+          "type": "boolean"
+        },
+        "demoMode": {
+          "type": "boolean"
+        },
+        "theme": {
+          "type": "string",
+          "enum": ["light", "dark"],
+          "maxLength": 10
+        },
+        "teamAName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "teamBName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "name",
+        "language",
+        "voiceCommentator",
+        "fairPlayEnabled",
+        "demoMode",
+        "theme",
+        "teamAName",
+        "teamBName",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Player": {
+      "title": "Player",
+      "description": "A family member participating in Hakam AI games.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "familyId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "age": {
+          "type": "number"
+        },
+        "team": {
+          "type": "string",
+          "enum": ["A", "B"],
+          "maxLength": 5
+        },
+        "colour": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20
+        },
+        "avatar": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 30
+        },
+        "badges": {
+          "type": "array"
+        },
+        "ready": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "familyId",
+        "name",
+        "age",
+        "team",
+        "colour",
+        "avatar",
+        "badges",
+        "ready",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Game": {
+      "title": "Game",
+      "description": "A completed or active game session judged by Hakam AI.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "familyId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "gameType": {
+          "type": "string",
+          "enum": ["football", "camel_race", "proverb_relay"],
+          "maxLength": 30
+        },
+        "teamAName": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "teamBName": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "scoreA": {
+          "type": "number"
+        },
+        "scoreB": {
+          "type": "number"
+        },
+        "winner": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "mvpName": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "mvpReasonEn": {
+          "type": "string",
+          "maxLength": 300
+        },
+        "mvpReasonAr": {
+          "type": "string",
+          "maxLength": 300
+        },
+        "coachSummaryEn": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "coachSummaryAr": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "reportHash": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "verified": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "familyId",
+        "gameType",
+        "teamAName",
+        "teamBName",
+        "scoreA",
+        "scoreB",
+        "winner",
+        "mvpName",
+        "mvpReasonEn",
+        "mvpReasonAr",
+        "coachSummaryEn",
+        "coachSummaryAr",
+        "reportHash",
+        "verified",
+        "createdAt"
+      ]
+    },
+    "GameEvent": {
+      "title": "GameEvent",
+      "description": "An explainable AI referee decision event with frame evidence.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "familyId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "gameId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "timeSec": {
+          "type": "number"
+        },
+        "type": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "team": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "playerName": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "points": {
+          "type": "number"
+        },
+        "reasonEn": {
+          "type": "string",
+          "maxLength": 300
+        },
+        "reasonAr": {
+          "type": "string",
+          "maxLength": 300
+        },
+        "thumbnailDataUrl": {
+          "type": "string",
+          "maxLength": 150000
+        },
+        "verified": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "familyId",
+        "gameId",
+        "timeSec",
+        "type",
+        "team",
+        "playerName",
+        "points",
+        "reasonEn",
+        "reasonAr",
+        "thumbnailDataUrl",
+        "verified",
+        "createdAt"
+      ]
+    },
+    "Proverb": {
+      "title": "Proverb",
+      "description": "An Emirati/Arabic proverb used in Proverb Relay.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "familyId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "firstHalf": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "ending": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "meaningEn": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "category": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "familyId",
+        "firstHalf",
+        "ending",
+        "meaningEn",
+        "category",
+        "createdAt"
+      ]
+    },
+    "LeaderboardEntry": {
+      "title": "LeaderboardEntry",
+      "description": "Season leaderboard statistics for a family player.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "familyId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "playerName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "team": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "points": {
+          "type": "number"
+        },
+        "wins": {
+          "type": "number"
+        },
+        "goals": {
+          "type": "number"
+        },
+        "bestRaceTime": {
+          "type": "number"
+        },
+        "correctAnswers": {
+          "type": "number"
+        },
+        "fairPlayBonusCount": {
+          "type": "number"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "familyId",
+        "playerName",
+        "team",
+        "points",
+        "wins",
+        "goals",
+        "bestRaceTime",
+        "correctAnswers",
+        "fairPlayBonusCount",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/families/{familyId}": {
+      "schema": { "$ref": "#/entities/Family" },
+      "description": "Family profile, language, fair-play settings, and team names."
+    },
+    "/families/{familyId}/players/{playerId}": {
+      "schema": { "$ref": "#/entities/Player" },
+      "description": "Family players with age, team, shirt colour, and badges."
+    },
+    "/families/{familyId}/games/{gameId}": {
+      "schema": { "$ref": "#/entities/Game" },
+      "description": "Saved games with scores, MVP, hash verification, and Gemini coach notes."
+    },
+    "/families/{familyId}/games/{gameId}/events/{eventId}": {
+      "schema": { "$ref": "#/entities/GameEvent" },
+      "description": "Explainable AI referee events for a specific game."
+    },
+    "/families/{familyId}/proverbs/{proverbId}": {
+      "schema": { "$ref": "#/entities/Proverb" },
+      "description": "Custom Emirati and Arabic proverbs added by the family."
+    },
+    "/families/{familyId}/leaderboard/{playerId}": {
+      "schema": { "$ref": "#/entities/LeaderboardEntry" },
+      "description": "Season leaderboard and trophy stats per player."
+    }
+  }
+}
